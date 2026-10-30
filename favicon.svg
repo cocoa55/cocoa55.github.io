@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#282828"/>
+  <!-- lit crescent: a beige disc with the night side cut out, matching the Earth on the home page -->
+  <mask id="night">
+    <rect width="64" height="64" fill="#fff"/>
+    <circle cx="22" cy="24" r="22" fill="#000"/>
+  </mask>
+  <circle cx="34" cy="34" r="20" fill="#ebdbb2" mask="url(#night)"/>
+</svg>
