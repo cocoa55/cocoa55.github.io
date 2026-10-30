@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Robbie Acosta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Gruvbox dark, neutrals only */
+  :root {
+    --bg0-h: #1d2021;
+    --bg0:   #282828;
+    --bg1:   #3c3836;
+    --bg2:   #504945;
+    --bg3:   #665c54;
+    --gray:  #928374;
+    --fg4:   #a89984;
+    --fg3:   #bdae93;
+    --fg2:   #d5c4a1;
+    --fg1:   #ebdbb2;
+    --fg0:   #fbf1c7;
+
+    --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+    --sans: "IBM Plex Sans", system-ui, sans-serif;
+    --max: 760px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg0);
+    color: var(--fg2);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.7;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  a { color: var(--fg1); text-decoration: underline; text-decoration-color: var(--bg3); text-underline-offset: 3px; }
+  a:hover { text-decoration-color: var(--fg1); }
+  ::selection { background: var(--bg2); color: var(--fg0); }
+
+  /* ---------- editor tab bar ---------- */
+  .tabbar {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg0-h);
+    border-bottom: 1px solid var(--bg1);
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .tabbar-inner {
+    display: flex; align-items: stretch;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .tabbar-inner::-webkit-scrollbar { display: none; }
+  .brand {
+    padding: 12px 18px; color: var(--fg4); white-space: nowrap;
+    border-right: 1px solid var(--bg1); text-decoration: none;
+  }
+  .brand b { color: var(--fg1); font-weight: 500; }
+  .tab {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 18px;
+    color: var(--gray); text-decoration: none; white-space: nowrap;
+    border-right: 1px solid var(--bg1);
+    border-top: 2px solid transparent;
+    transition: color .15s, background .15s;
+  }
+  .tab:hover { color: var(--fg2); background: var(--bg0); }
+  .tab.active {
+    color: var(--fg1); background: var(--bg0);
+    border-top-color: var(--fg3);
+  }
+  .tab .key { color: var(--bg3); font-size: 11px; }
+  .tab.active .key { color: var(--gray); }
+
+  /* ---------- breadcrumb ---------- */
+  .crumb {
+    font-family: var(--mono); font-size: 12px; color: var(--gray);
+    max-width: calc(var(--max) + 120px); margin: 0 auto; width: 100%;
+    padding: 14px 16px 0;
+  }
+  .crumb span { color: var(--fg4); }
+
+  /* ---------- page / code frame ---------- */
+  main { flex: 1; width: 100%; }
+  .page {
+    max-width: calc(var(--max) + 120px);
+    margin: 0 auto; padding: 28px 16px 80px;
+    animation: fade .25s ease;
+  }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .code {
+    font-family: var(--mono); font-size: 14px; line-height: 1.8;
+    color: var(--fg4);
+  }
+  .kw  { color: var(--fg3); }
+  .fn  { color: var(--fg1); font-weight: 700; }
+  .cm  { color: var(--gray); font-style: italic; }
+  .str { color: var(--fg2); }
+  .dim { color: var(--bg3); }
+
+  .with-gutter { display: grid; grid-template-columns: 44px 1fr; column-gap: 20px; }
+  .gutter {
+    font-family: var(--mono); font-size: 12px; color: var(--bg2);
+    text-align: right; line-height: 1.8; padding-top: 2px; user-select: none;
+    border-right: 1px solid var(--bg1); padding-right: 12px;
+  }
+
+  /* ---------- home ---------- */
+  .hero-name {
+    font-family: var(--mono); font-weight: 500;
+    font-size: clamp(36px, 7vw, 60px); line-height: 1.1;
+    color: var(--fg0); margin: 22px 0 6px; letter-spacing: -0.02em;
+  }
+  .cursor {
+    display: inline-block; width: .55em; height: .95em;
+    background: var(--fg1); vertical-align: -0.08em; margin-left: 6px;
+    animation: blink 1.1s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  .role { font-family: var(--mono); font-size: 14px; color: var(--fg4); margin-bottom: 28px; }
+  /* Earth crescent tucked against the right edge of the home page, clear of the text */
+  main { position: relative; overflow-x: clip; }
+  .earth-bg {
+    --h: 680px;
+    position: absolute; top: -40px; right: 0;
+    height: var(--h); width: calc(var(--h) * 16 / 9);
+    background: url("assets/earth.jpg") center / cover no-repeat;
+    /* the lit edge sits at 71% of the photo; slide it to just inside the window's right edge */
+    transform: translateX(calc(var(--h) * 16 / 9 * .29 - 28px));
+    -webkit-mask-image: linear-gradient(to right, transparent 40%, #000 62%), linear-gradient(to bottom, #000 70%, transparent);
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(to right, transparent 40%, #000 62%), linear-gradient(to bottom, #000 70%, transparent);
+    mask-composite: intersect;
+    pointer-events: none; z-index: 0;
+  }
+  .earth-label {
+    position: absolute; right: 56px; top: 540px; z-index: 0; pointer-events: none;
+    font-family: var(--mono); font-size: 11px; color: var(--gray); font-style: italic;
+  }
+  .page.home { position: relative; z-index: 1; }
+  /* on mid-size screens, keep the intro clear of the crescent on the right */
+  @media (min-width: 641px) and (max-width: 1360px) {
+    .page.home .prose, .page.home .links, .page.home .goto { max-width: max(420px, calc(100vw - 600px)); }
+  }
+  .hero { padding: 48px 0 56px; }
+  .nowrap { white-space: nowrap; }
+  .indent { padding-left: 24px; border-left: 1px dashed var(--bg1); margin-left: 2px; }
+  .prose p { margin: 0 0 16px; max-width: 62ch; }
+  .prose strong { color: var(--fg1); font-weight: 500; }
+
+  .goto {
+    margin: 28px 0 8px; display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-width: 62ch;
+  }
+  .goto a {
+    display: block; text-decoration: none;
+    border: 1px solid var(--bg1); background: var(--bg0-h);
+    padding: 12px 14px; font-family: var(--mono); font-size: 13px;
+    color: var(--fg2); transition: border-color .15s, transform .15s;
+  }
+  .goto a:hover { border-color: var(--fg4); transform: translateY(-2px); }
+  .goto a small { display: block; color: var(--gray); font-size: 12px; margin-top: 2px; }
+
+  .links { font-family: var(--mono); font-size: 13px; display: flex; gap: 20px; flex-wrap: wrap; margin-top: 18px; }
+
+  /* ---------- section headings ---------- */
+  .section-head { margin-bottom: 28px; }
+  .section-head .addr { font-family: var(--mono); font-size: 12px; color: var(--gray); letter-spacing: .08em; }
+  .section-head h1 {
+    font-family: var(--mono); font-weight: 500; color: var(--fg0);
+    font-size: 30px; margin: 4px 0 6px; letter-spacing: -0.01em;
+  }
+  .section-head p { margin: 0; color: var(--fg4); max-width: 60ch; }
+
+  /* ---------- cards / lists ---------- */
+  .card {
+    display: block; text-decoration: none; color: inherit;
+    border: 1px solid var(--bg1); background: var(--bg0-h);
+    padding: 18px 20px; margin-bottom: 14px;
+    transition: border-color .15s;
+  }
+  a.card:hover { border-color: var(--fg4); }
+  .card-top { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+  .card h3 { margin: 0; font-family: var(--mono); font-weight: 500; font-size: 16px; color: var(--fg1); }
+  .card .meta { font-family: var(--mono); font-size: 12px; color: var(--gray); }
+  .card p { margin: 8px 0 0; color: var(--fg3); font-size: 15px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .tag {
+    font-family: var(--mono); font-size: 11px; color: var(--fg4);
+    border: 1px solid var(--bg2); padding: 1px 8px;
+  }
+
+  /* experience timeline */
+  .timeline { border-left: 1px solid var(--bg2); margin-left: 6px; }
+  .job { position: relative; padding: 0 0 34px 26px; }
+  .job::before {
+    content: ""; position: absolute; left: -5px; top: 9px;
+    width: 9px; height: 9px; background: var(--bg0); border: 1px solid var(--fg4);
+  }
+  .job:first-child::before { background: var(--fg3); }
+  .job h3 { margin: 0; font-family: var(--mono); font-weight: 500; font-size: 16px; color: var(--fg1); }
+  .job .where { color: var(--fg3); }
+  .job .when { font-family: var(--mono); font-size: 12px; color: var(--gray); }
+  .job ul { margin: 10px 0 0; padding-left: 18px; color: var(--fg3); font-size: 15px; }
+  .job li { margin-bottom: 4px; }
+  .job li::marker { content: "› "; color: var(--gray); }
+
+  /* blog list */
+  .post-row {
+    display: grid; grid-template-columns: 110px 1fr; gap: 16px;
+    padding: 14px 0; border-bottom: 1px dashed var(--bg1);
+    text-decoration: none; color: inherit;
+  }
+  .post-row:hover h3 { text-decoration: underline; text-underline-offset: 3px; }
+  .post-row time { font-family: var(--mono); font-size: 13px; color: var(--gray); padding-top: 2px; }
+  .post-row h3 { margin: 0; font-family: var(--mono); font-weight: 500; font-size: 15px; color: var(--fg1); }
+  .post-row p { margin: 4px 0 0; font-size: 14px; color: var(--fg4); }
+
+  /* article */
+  .article h1 { font-family: var(--mono); font-weight: 500; color: var(--fg0); font-size: 28px; line-height: 1.25; margin: 6px 0 8px; }
+  .article .meta { font-family: var(--mono); font-size: 12px; color: var(--gray); margin-bottom: 30px; }
+  .article h2 { font-family: var(--mono); font-weight: 500; color: var(--fg1); font-size: 18px; margin: 34px 0 10px; }
+  .article h2::before { content: "## "; color: var(--bg3); }
+  .article p { max-width: 66ch; }
+  .article ul { padding-left: 20px; max-width: 66ch; }
+  .article li { margin-bottom: 8px; }
+  .article strong { color: var(--fg1); font-weight: 500; }
+  pre {
+    background: var(--bg0-h); border: 1px solid var(--bg1);
+    padding: 16px 18px; overflow-x: auto;
+    font-family: var(--mono); font-size: 13px; line-height: 1.7; color: var(--fg3);
+  }
+  code { font-family: var(--mono); font-size: .9em; background: var(--bg1); padding: 1px 5px; color: var(--fg1); }
+  pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+  .back { font-family: var(--mono); font-size: 13px; display: inline-block; margin-bottom: 18px; color: var(--fg4); text-decoration: none; }
+  .back:hover { color: var(--fg1); }
+
+  /* books */
+  .featured { display: grid; grid-template-columns: 1.3fr 1fr; gap: 14px; margin-bottom: 40px; }
+  .feature {
+    border: 1px solid var(--bg2); background: var(--bg0-h); padding: 20px 22px;
+    display: grid; grid-template-columns: 110px 1fr; gap: 20px; align-items: start;
+  }
+  .cover {
+    position: relative; width: 72px; aspect-ratio: 2 / 3; flex-shrink: 0;
+    background: var(--bg1); border: 1px solid var(--bg2); overflow: hidden;
+  }
+  .cover.lg { width: 110px; }
+  .cover img {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    filter: sepia(.25) brightness(.92);
+    transition: filter .2s;
+  }
+  .book:hover .cover img, .feature:hover .cover img { filter: none; }
+  .cover-fallback {
+    position: absolute; inset: 0; padding: 8px;
+    font-family: var(--mono); font-size: 10px; line-height: 1.3; color: var(--fg4);
+    display: flex; align-items: flex-end; overflow-wrap: anywhere;
+  }
+  .cover img + .cover-fallback, .cover:has(img) .cover-fallback { visibility: hidden; }
+  .feature:first-child { border-color: var(--fg4); }
+  .feature-label { font-family: var(--mono); font-size: 12px; color: var(--gray); font-style: italic; }
+  .feature h3 { font-family: var(--mono); font-weight: 500; color: var(--fg0); font-size: 22px; margin: 10px 0 2px; }
+  .feature .by { font-family: var(--mono); font-size: 13px; color: var(--fg4); }
+  .feature p { color: var(--fg3); font-size: 15px; margin: 12px 0 0; }
+  .disclaimer { font-family: var(--mono); font-size: 12px; color: var(--gray); font-style: italic; margin: -14px 0 24px; }
+  .subhead { font-family: var(--mono); font-size: 13px; color: var(--fg4); font-style: italic; margin-bottom: 12px; }
+  @media (max-width: 640px) {
+    .featured { grid-template-columns: 1fr; }
+    .feature { grid-template-columns: 84px 1fr; gap: 16px; padding: 16px; }
+    .cover.lg { width: 84px; }
+    .feature h3 { font-size: 18px; }  }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; font-family: var(--mono); font-size: 12px; }
+  .filters button {
+    font: inherit; background: transparent; color: var(--fg4);
+    border: 1px solid var(--bg2); padding: 4px 12px; cursor: pointer;
+  }
+  .filters button:hover { color: var(--fg1); border-color: var(--fg4); }
+  .filters button.on { background: var(--fg3); color: var(--bg0); border-color: var(--fg3); }
+  .books { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); gap: 14px; }
+  .book { border: 1px solid var(--bg1); background: var(--bg0-h); display: flex; gap: 16px; padding: 14px; }
+  .book-body { font-size: 14px; color: var(--fg3); flex: 1; min-width: 0; }
+  .book-body .t { font-family: var(--mono); color: var(--fg1); font-size: 14px; line-height: 1.35; font-weight: 500; }
+  .book-body .a { font-family: var(--mono); color: var(--gray); font-size: 11px; margin-top: 3px; }
+  .book-body p { margin: 8px 0 0; line-height: 1.55; }
+  .book-link { display: inline-block; font-family: var(--mono); font-size: 12px; margin-top: 10px; color: var(--fg4); }
+  .resources { border-top: 1px dashed var(--bg1); }
+  .resource {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; align-items: center;
+    padding: 12px 4px; border-bottom: 1px dashed var(--bg1);
+    text-decoration: none; color: inherit; transition: background .15s;
+  }
+  .resource:hover { background: var(--bg0-h); }
+  .resource:hover .r-name { text-decoration: underline; text-underline-offset: 3px; }
+  .r-name { font-family: var(--mono); color: var(--fg1); font-size: 14px; }
+  .r-who { grid-row: 2; font-size: 13px; color: var(--gray); }
+  .resource .tag { grid-row: 1 / span 2; grid-column: 2; }
+
+  /* ---------- status line ---------- */
+  .statusline {
+    position: sticky; bottom: 0; z-index: 10;
+    display: flex; align-items: stretch;
+    background: var(--bg1); font-family: var(--mono); font-size: 12px;
+    color: var(--fg4); border-top: 1px solid var(--bg2);
+  }
+  .statusline > div { padding: 4px 12px; white-space: nowrap; }
+  .statusline .mode { background: var(--fg3); color: var(--bg0); font-weight: 700; }
+  .statusline .file { background: var(--bg2); color: var(--fg1); }
+  .statusline .spacer { flex: 1; }
+  .statusline .sp { color: var(--fg2); font-variant-numeric: tabular-nums; }
+  .back .pop { color: var(--bg3); font-size: 11px; margin-left: 6px; }
+  .statusline .hint { color: var(--gray); }
+
+  @media (max-width: 640px) {
+    .with-gutter { grid-template-columns: 1fr; }
+    .gutter { display: none; }
+    .indent { padding-left: 14px; }
+    .earth-bg { --h: 440px; opacity: .45; }
+    .earth-label { display: none; }
+    .hero { padding: 32px 0 40px; }
+    .post-row { grid-template-columns: 1fr; gap: 2px; }
+    .statusline .hint, .statusline .enc, #sl-pos { display: none; }
+    .statusline > div { padding: 4px 8px; font-size: 11px; }
+    .statusline .file { overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-shrink: 1; }
+    .tab .key { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="tabbar">
+  <div class="tabbar-inner" id="tabs"></div>
+</nav>
+<div class="crumb" id="crumb"></div>
+<main id="app"></main>
+<footer class="statusline">
+  <div class="mode">NORMAL</div>
+  <div class="file" id="sl-file">about.cpp</div>
+  <div class="spacer"></div>
+  <div class="hint">press 1–5 to switch tabs</div>
+  <div class="enc">utf-8 · c++23</div>
+  <div class="sp" id="sl-sp">sp 0x000000000000</div>
+  <div id="sl-pos">ln 1</div>
+</footer>
+
+<script>
+/* ===================================================================
+   CONTENT — edit everything here. All of it is placeholder for now.
+   =================================================================== */
+const ME = {
+  name: "Robbie Acosta",
+  handle: "robbie.acosta",
+  role: "Student @ University of Toronto",
+  github: "https://github.com/cocoa55",
+  linkedin: "https://www.linkedin.com/in/robbie-acosta",
+  email: "robbie.acosta@mail.utoronto.ca",
+};
+
+const CATS = ["tchalla", "phoebe", "patrick"];
+
+
+
+// Kept high level on purpose: details live on GitHub, so this never needs updating
+const PROJECTS = [
+  {
+    name: "scratter",
+    repo: "https://github.com/scratterapp/scratter",
+    blurb: "My own project: an unofficial native Apple Music client for Linux and Windows. A C++ background daemon, scratterd, keeps the music playing after you close the window. I work on the Linux side; my friend Kerelos works on the Windows side.",
+    tags: ["C++", "daemon", "audio", "Linux"],
+  },
+  {
+    name: "kalshi-client",
+    repo: "https://github.com/cocoa55/kalshi-client",
+    blurb: "A C++ trading client for Kalshi prediction markets, built on raw sockets with hand-written networking and parsing code.",
+    tags: ["C++", "networking", "low-latency"],
+  },
+  {
+    name: "AnyPS5 (contributor)",
+    repo: "https://github.com/boykopovar/AnyPS5/pulls?q=is%3Apr+author%3Acocoa55",
+    blurb: "Open-source contributions to AnyPS5, a tool that ports PS5 executables to Linux and Windows.",
+    tags: ["C++", "open source"],
+  },
+];
+
+const EXPERIENCE = [
+  {
+    title: "Open Source Contributor",
+    org: "AnyPS5",
+    url: "https://github.com/boykopovar/AnyPS5",
+    when: "Oct 2026 — Present",
+    points: ["Fixing code-generation bugs in the x86-64 instruction rewriter of a static relinker that ports PS5 executables to Linux and Windows."],
+  },
+  {
+    title: "Private Science & English Tutor",
+    org: "Freelance",
+    when: "Aug 2025 — Present",
+    points: ["One-on-one online lessons in high-school science and English, built around each student's gaps."],
+  },
+  {
+    title: "Honours Bachelor of Science",
+    org: "University of Toronto Scarborough",
+    when: "Expected June 2029",
+    points: [],
+  },
+];
+
+const POSTS = [
+  {
+    slug: "how-i-got-here",
+    title: "How I ended up writing C++",
+    date: "2026-10-30",
+    tags: ["personal", "c++"],
+    summary: "A Citadel talk, Mr. Robot, and why I stuck with C++.",
+    body: `<p>It literally never dawned on me to learn programming. Then I somehow stumbled on a video of
+Juan Alday at Citadel giving a talk called <em>Why C++ Wins in Finance</em>, and for some reason I was so
+interested, despite all the AI fearmongering going around. I was also watching Mr. Robot at the time
+(yes, laugh).</p>
+<h2>Why C++</h2>
+<p>Zero-overhead abstraction: what you write is what you get. It's always being developed on, and it's
+used in a lot of the things I'm interested in: HFT, systems programming, and low-level stuff.</p>
+<h2>What I'm doing now</h2>
+<p>Right now I'm mainly focused on operating systems and my own project,
+<a href="https://github.com/scratterapp/scratter" target="_blank" rel="noopener">Scratter</a>, a native Apple
+Music client with a C++ daemon (I'm on the Linux side). I'm also working on
+<a href="https://github.com/yhzhang0128/egos-2000" target="_blank" rel="noopener">egos-2000</a>, reading OSTEP,
+and benchmarking different design patterns in C++. And I do LeetCode every day.</p>
+<h2>Off the desk</h2>
+<p>Outside of that, I work out, I'm watching Game of Thrones for the first time (no spoilers, please),
+and I really like movies. My favourites are <em>It's a Wonderful Life</em>, <em>Whiplash</em>,
+<em>Ratatouille</em>, and <em>Magnolia</em>. I used to be really into pharmacology and thought I wanted to
+be a doctor. I've lived in Canada my whole life.</p>`,
+  },
+];
+
+const FAVORITE_BOOK = {
+  title: "The Iliad",
+  author: "Homer",
+  translator: "Robert Fagles",
+  isbn: "9780140275360",
+  note: "I just find it a beautiful story, and Book 1 is my favourite part. I read the Fagles translation specifically: I've read the prose versions, and I find they lack the poetry of Homer.",
+};
+
+const CURRENT_BOOK = {
+  title: "Operating Systems: Three Easy Pieces",
+  author: "Remzi & Andrea Arpaci-Dusseau",
+  isbn: "9781985086593",
+  note: "Very fun so far. The dialogues and homework make the ideas click.",
+};
+
+const BOOKS = [
+  { title: "learncpp.com", author: "Alex & contributors", shelf: "c++", url: "https://www.learncpp.com", label: "learncpp.com",
+    note: "The first programming anything I ever read. Highly recommend." },
+  { title: "C++: A Beginner's Guide", author: "Herbert Schildt", shelf: "c++", isbn: "9780072232158",
+    note: "" },
+  { title: "Inside the Machine", author: "Jon Stokes", shelf: "hardware", isbn: "9781593271046",
+    note: "A great read for computer architecture that starts from the very bottom of what a computer is." },
+  { title: "What Every Programmer Should Know About Memory", author: "Ulrich Drepper", shelf: "hardware",
+    url: "https://people.freedesktop.org/~drepper/cpumemory.pdf", label: "PDF",
+    note: "Just great. Not much to say about it; very useful." },
+];
+
+// Blogs, channels, and talks (no covers; type is shown as a tag)
+const RESOURCES = [
+  { name: "C++ Weekly", who: "Jason Turner", type: "youtube", url: "https://www.youtube.com/@cppweekly" },
+  { name: "Mike Shah", who: "Mike Shah", type: "youtube", url: "https://www.youtube.com/@MikeShah" },
+  { name: "Bo Qian", who: "Bo Qian", type: "youtube", url: "https://www.youtube.com/@BoQianTheProgrammer" },
+  { name: "Modernes C++", who: "Rainer Grimm", type: "blog", url: "https://www.modernescpp.com" },
+  { name: "C++ Stories", who: "Bartłomiej Filipek", type: "blog", url: "https://www.cppstories.com" },
+  { name: "CppCon", who: "conference talks", type: "talks", url: "https://www.youtube.com/@CppCon" },
+];
+
+/* ===================================================================
+   ROUTING + RENDERING
+   =================================================================== */
+const TABS = [
+  { path: "",           file: "about.cpp",      label: "about.cpp" },
+  { path: "projects",   file: "projects.hpp",   label: "projects.hpp" },
+  { path: "experience", file: "experience.log", label: "experience.log" },
+  { path: "blog",       file: "blog/",          label: "blog/" },
+  { path: "books",      file: "books.md",       label: "books.md" },
+];
+
+const app = document.getElementById("app");
+const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function renderTabs(active) {
+  document.getElementById("tabs").innerHTML =
+    `<a class="brand" href="#/">~/<b>${esc(ME.handle)}</b></a>` +
+    TABS.map((t, i) =>
+      `<a class="tab ${t.path === active ? "active" : ""}" href="#/${t.path}">
+         <span class="key">${i + 1}</span>${t.label}
+       </a>`).join("");
+}
+
+function gutter(n) {
+  return `<div class="gutter">${Array.from({ length: n }, (_, i) => i + 1).join("<br>")}</div>`;
+}
+
+// Each tab is a stack frame; the stack grows down, so tabs further right sit at lower
+// addresses, and opening a project or post pushes one more frame below its tab.
+const STACK_BASE = 0x7ffd5e3c2400;
+const FRAME = 0x40;
+const frameAddr = (tab, depth = 0) => STACK_BASE - tab * FRAME - depth * 0x20;
+const hex = n => "0x" + n.toString(16);
+
+let sp = null;
+function moveSp(target) {
+  const el = document.getElementById("sl-sp");
+  if (sp === null) { sp = target; el.textContent = "sp " + hex(sp); return; }
+  const step = target < sp ? -8 : 8;
+  clearInterval(moveSp.timer);
+  moveSp.timer = setInterval(() => {
+    sp = Math.abs(target - sp) <= 8 ? target : sp + step;
+    el.textContent = "sp " + hex(sp);
+    el.classList.toggle("push", target < sp || (sp === target && step < 0));
+    if (sp === target) clearInterval(moveSp.timer);
+  }, 12);
+}
+
+function sectionHead(addr, title, desc) {
+  return `<div class="section-head">
+    <div class="addr">${addr}</div>
+    <h1>${title}</h1>
+    ${desc ? `<p>${desc}</p>` : ""}
+  </div>`;
+}
+
+const views = {
+  home() {
+    return `<div class="earth-bg" aria-hidden="true"></div>
+    <div class="earth-label" aria-hidden="true">there is no other home</div>
+    <div class="page home with-gutter">
+      ${gutter(40)}
+      <div>
+        <div class="code">
+          <span class="kw">namespace</span> <span class="fn">toronto</span> {<br>
+          <span class="kw">inline constexpr</span> std::inplace_vector&lt;std::meta::info, 3&gt; cats{ ${CATS.map(c => `<span class="fn">^^</span>${esc(c)}`).join(", ")} }; <span class="cm">// RIP C++26</span>
+        </div>
+
+        <div class="indent">
+          <div class="hero">
+            <div class="hero-name">${esc(ME.name.split(" ").slice(0, -1).join(" "))} <span class="nowrap">${esc(ME.name.split(" ").pop())}<span class="cursor"></span></span></div>
+            <div class="role">${esc(ME.role)}</div>
+          </div>
+
+          <div class="prose">
+            <p>I enjoy building low-level software in <strong>C++</strong>, close to the operating system
+            and the hardware. I'm building <a href="https://github.com/scratterapp/scratter" target="_blank" rel="noopener">Scratter</a>,
+            a native Apple Music client with a background C++ daemon (I handle the Linux side), and I contribute
+            to <a href="https://github.com/boykopovar/AnyPS5" target="_blank" rel="noopener">AnyPS5</a>, an
+            open-source tool that ports PS5 executables to Linux and Windows. Right now I'm focused on
+            operating systems. I'm most interested in HFT, systems programming, and performance engineering.
+            Always happy to talk about projects or opportunities, so my inbox is open.</p>
+          </div>
+
+          <div class="code" style="margin-top:22px"><span class="cm">// where to next?</span></div>
+          <div class="goto">
+            <a href="#/projects">projects.hpp<small>things I've built</small></a>
+            <a href="#/experience">experience.log<small>where I've worked</small></a>
+            <a href="#/blog">blog/<small>notes &amp; write-ups</small></a>
+            <a href="#/books">books.md<small>books I recommend</small></a>
+          </div>
+
+          <div class="links">
+            <a href="${ME.github}">github</a>
+            <a href="${ME.linkedin}">linkedin</a>
+            <a href="mailto:${ME.email}">${esc(ME.email)}</a>
+          </div>
+        </div>
+
+        <div class="code" style="margin-top:18px">} <span class="cm">// namespace toronto</span></div>
+      </div>
+    </div>`;
+  },
+
+  projects() {
+    return `<div class="page">
+      ${sectionHead(`${hex(frameAddr(1))} · PROJECTS`, "Projects", "Things I've built and contributed to. Each one links to GitHub.")}
+      ${PROJECTS.map(p => `
+        <a class="card" href="${p.repo}" target="_blank" rel="noopener">
+          <div class="card-top"><h3>${esc(p.name)}</h3><span class="meta">github →</span></div>
+          <p>${esc(p.blurb)}</p>
+          <div class="tags">${p.tags.map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>
+        </a>`).join("")}
+    </div>`;
+  },
+
+  experience() {
+    return `<div class="page">
+      ${sectionHead(`${hex(frameAddr(2))} · EXPERIENCE`, "Experience", "Work, teaching, and school, newest first.")}
+      <div class="timeline">
+        ${EXPERIENCE.map(j => `
+          <div class="job">
+            <h3>${esc(j.title)} <span class="where">@ ${j.url ? `<a href="${j.url}" target="_blank" rel="noopener">${esc(j.org)}</a>` : esc(j.org)}</span></h3>
+            <div class="when">${esc(j.when)}</div>
+            ${j.points.length ? `<ul>${j.points.map(pt => `<li>${esc(pt)}</li>`).join("")}</ul>` : ""}
+          </div>`).join("")}
+      </div>
+    </div>`;
+  },
+
+  blog() {
+    return `<div class="page">
+      ${sectionHead(`${hex(frameAddr(3))} · BLOG`, "Blog", "Personal notes on C++, computing-adjacent concepts, and my personal life off of the desk.")}
+      <div class="disclaimer">// Opinions are my own and don't represent any school, employer, or project I'm part of.</div>
+      ${POSTS.map(p => `
+        <a class="post-row" href="#/blog/${p.slug}">
+          <time>${p.date}</time>
+          <div><h3>${esc(p.title)}</h3><p>${esc(p.summary)}</p></div>
+        </a>`).join("")}
+    </div>`;
+  },
+
+  post(slug) {
+    const p = POSTS.find(x => x.slug === slug);
+    if (!p) return views.notFound();
+    return `<div class="page article">
+      <a class="back" href="#/blog">← cd .. <span class="pop">// pop frame ${hex(frameAddr(3, 1))}</span></a>
+      <h1>${esc(p.title)}</h1>
+      <div class="meta">${p.date} · ${p.tags.map(t => "#" + esc(t)).join(" ")}</div>
+      ${p.body}
+    </div>`;
+  },
+
+  books() {
+    const shelves = ["all", ...new Set(BOOKS.map(b => b.shelf))];
+    return `<div class="page">
+      ${sectionHead(`${hex(frameAddr(4))} · BOOKS`, "Books", "What I love, what I'm reading, and what I'd hand you.")}
+      <div class="featured">
+        <div class="feature">
+          ${cover(FAVORITE_BOOK, "lg")}
+          <div>
+            <div class="feature-label">// favourite</div>
+            <h3>${esc(FAVORITE_BOOK.title)}</h3>
+            <div class="by">${esc(FAVORITE_BOOK.author)} · trans. ${esc(FAVORITE_BOOK.translator)}</div>
+            <p>${esc(FAVORITE_BOOK.note)}</p>
+          </div>
+        </div>
+        <div class="feature">
+          ${cover(CURRENT_BOOK, "lg")}
+          <div>
+            <div class="feature-label">// currently reading</div>
+            <h3>${esc(CURRENT_BOOK.title)}</h3>
+            <div class="by">${esc(CURRENT_BOOK.author)}</div>
+            <p>${esc(CURRENT_BOOK.note)}</p>
+          </div>
+        </div>
+      </div>
+      <div class="subhead">// read &amp; recommended</div>
+      <div class="filters">${shelves.map((s, i) =>
+        `<button class="${i === 0 ? "on" : ""}" data-shelf="${s}">${s}</button>`).join("")}</div>
+      <div class="books" id="books"></div>
+
+      <div class="subhead" style="margin-top:44px">// blogs, channels &amp; talks</div>
+      <div class="resources">
+        ${RESOURCES.map(r => `
+          <a class="resource" href="${r.url}" target="_blank" rel="noopener">
+            <span class="r-name">${esc(r.name)}</span>
+            <span class="r-who">${esc(r.who)}</span>
+            <span class="tag">${esc(r.type)}</span>
+          </a>`).join("")}
+      </div>
+    </div>`;
+  },
+
+  notFound() {
+    return `<div class="page"><div class="code">
+      <span class="cm">// error: no such file or directory</span><br>
+      <a href="#/">return home;</a></div></div>`;
+  },
+};
+
+// Covers come from Open Library by ISBN; if one is missing, a plain title block shows instead
+function cover(b, cls = "") {
+  return `<div class="cover ${cls}">
+    <span class="cover-fallback">${esc(b.title)}</span>
+    ${b.isbn ? `<img src="https://covers.openlibrary.org/b/isbn/${b.isbn}-L.jpg?default=false" alt="Cover of ${esc(b.title)}" loading="lazy" onerror="this.remove()">` : ""}
+  </div>`;
+}
+
+function renderBooks(shelf) {
+  const list = BOOKS.filter(b => shelf === "all" || b.shelf === shelf);
+  document.getElementById("books").innerHTML = list.map(b => `
+    <div class="book">
+      ${cover(b)}
+      <div class="book-body">
+        <div class="t">${esc(b.title)}</div>
+        <div class="a">${esc(b.author)} · #${esc(b.shelf)}</div>
+        ${b.note ? `<p>${esc(b.note)}</p>` : ""}
+        ${b.url ? `<a class="book-link" href="${b.url}" target="_blank" rel="noopener">read it → ${esc(b.label || "link")}</a>` : ""}
+      </div>
+    </div>`).join("");
+}
+
+function route() {
+  const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
+  const [top = "", sub] = parts;
+  let html, file;
+
+  if (top === "")                 { html = views.home(); file = "about.cpp"; }
+  else if (top === "projects")    { html = views.projects(); file = "projects.hpp"; }
+  else if (top === "experience")  { html = views.experience(); file = "experience.log"; }
+  else if (top === "blog")        { html = sub ? views.post(sub) : views.blog(); file = sub ? `blog/${sub}.md` : "blog/"; }
+  else if (top === "books")       { html = views.books(); file = "books.md"; }
+  else                            { html = views.notFound(); file = "???"; }
+
+  renderTabs(TABS.some(t => t.path === top) ? top : null);
+  const tabIdx = Math.max(0, TABS.findIndex(t => t.path === top));
+  moveSp(frameAddr(tabIdx, sub && top === "blog" ? 1 : 0));
+  app.innerHTML = html;
+  document.getElementById("crumb").innerHTML = `~/${esc(ME.handle)}/<span>${esc(file)}</span>`;
+  document.getElementById("sl-file").textContent = file;
+  document.getElementById("sl-pos").textContent = "ln 1";
+  window.scrollTo(0, 0);
+
+  if (top === "books") {
+    renderBooks("all");
+    app.querySelectorAll(".filters button").forEach(btn => btn.addEventListener("click", () => {
+      app.querySelectorAll(".filters button").forEach(b => b.classList.toggle("on", b === btn));
+      renderBooks(btn.dataset.shelf);
+    }));
+  }
+}
+
+// fake cursor position in the status line as you scroll
+window.addEventListener("scroll", () => {
+  const ln = Math.max(1, Math.round(window.scrollY / 24) + 1);
+  document.getElementById("sl-pos").textContent = `ln ${ln}`;
+});
+
+// 1–5 jumps between tabs, like switching buffers
+window.addEventListener("keydown", e => {
+  if (e.metaKey || e.ctrlKey || e.altKey || /input|textarea/i.test(e.target.tagName)) return;
+  const i = parseInt(e.key, 10) - 1;
+  if (i >= 0 && i < TABS.length) location.hash = "#/" + TABS[i].path;
+});
+
+window.addEventListener("hashchange", route);
+route();
+</script>
+</body>
+</html>
