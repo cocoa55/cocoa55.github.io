@@ -169,7 +169,6 @@
     .page.home .prose, .page.home .links, .page.home .goto { max-width: max(420px, calc(100vw - 600px)); }
   }
   .hero { padding: 48px 0 56px; }
-  .indent { padding-left: 24px; border-left: 1px dashed var(--bg1); margin-left: 2px; }
   .prose p { margin: 0 0 16px; max-width: 62ch; }
   .prose strong { color: var(--fg1); font-weight: 500; }
 
@@ -338,7 +337,6 @@
   .statusline .hint { color: var(--gray); }
 
   @media (max-width: 640px) {
-    .indent { padding-left: 14px; }
     .earth-bg { --h: 440px; opacity: .45; }
     .earth-label { display: none; }
     .hero { padding: 32px 0 40px; }
@@ -347,6 +345,7 @@
     .statusline > div { padding: 4px 8px; font-size: 11px; }
     .statusline .file { overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-shrink: 1; }
     .tab .key { display: none; }
+    .code-top { font-size: 12px; }
     .goto { grid-template-columns: minmax(0, 1fr); }
   }
 </style>
@@ -528,11 +527,11 @@ const views = {
     <div class="page home">
       <div>
         <div class="code code-top">
-          <span class="kw">namespace</span> <span class="fn">toronto</span> {<br>
           <span class="cm">// RIP C++26</span><br>
-          <span class="kw">inline constexpr</span> std::inplace_vector&lt;std::meta::info, 3&gt; cats{<br>
+          <span class="kw">constexpr</span> std::inplace_vector&lt;std::meta::info, 3&gt; cats{<br>
           <span class="ind">${CATS.map(c => `<span class="fn">^^</span>${esc(c)}`).join(", ")}</span><br>
-          };
+          };<br>
+          <span class="kw">static_assert</span>(cats.size() == cats.capacity()); <span class="cm">// no room for a fourth</span>
         </div>
 
         <div class="indent">
@@ -564,7 +563,6 @@ const views = {
           </div>
         </div>
 
-        <div class="code" style="margin-top:18px">} <span class="cm">// namespace toronto</span></div>
       </div>
     </div>`;
   },
