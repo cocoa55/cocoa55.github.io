@@ -104,9 +104,7 @@
     max-width: calc(var(--max) + 120px);
     margin: 0 auto; padding: 28px 16px 80px;
   }
-  /* the namespace lines scroll sideways like an editor instead of wrapping */
-  .code-top { white-space: nowrap; overflow-x: auto; scrollbar-width: none; }
-  .code-top::-webkit-scrollbar { display: none; }
+  .code-top .ind { padding-left: 4ch; display: inline-block; }
   /* lines appear top to bottom when a page opens, like a file loading into an editor;
      route() numbers each element with --i */
   .rise { animation: rise .45s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--i, 0) * 55ms); }
@@ -531,7 +529,10 @@ const views = {
       <div>
         <div class="code code-top">
           <span class="kw">namespace</span> <span class="fn">toronto</span> {<br>
-          <span class="kw">inline constexpr</span> std::inplace_vector&lt;std::meta::info, 3&gt; cats{ ${CATS.map(c => `<span class="fn">^^</span>${esc(c)}`).join(", ")} }; <span class="cm">// RIP C++26</span>
+          <span class="cm">// RIP C++26</span><br>
+          <span class="kw">inline constexpr</span> std::inplace_vector&lt;std::meta::info, 3&gt; cats{<br>
+          <span class="ind">${CATS.map(c => `<span class="fn">^^</span>${esc(c)}`).join(", ")}</span><br>
+          };
         </div>
 
         <div class="indent">
