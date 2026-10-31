@@ -4,6 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Robbie Acosta</title>
+<meta name="description" content="Robbie Acosta, a student at the University of Toronto building low-level software in C++.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://robbieacosta.com/">
+<meta property="og:title" content="Robbie Acosta">
+<meta property="og:description" content="Student at the University of Toronto building low-level software in C++.">
+<meta property="og:image" content="https://robbieacosta.com/assets/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#282828">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="apple-touch-icon.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -93,9 +103,30 @@
   .page {
     max-width: calc(var(--max) + 120px);
     margin: 0 auto; padding: 28px 16px 80px;
-    animation: fade .25s ease;
   }
-  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  /* the namespace lines scroll sideways like an editor instead of wrapping */
+  .code-top { white-space: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .code-top::-webkit-scrollbar { display: none; }
+  /* lines appear top to bottom when a page opens, like a file loading into an editor;
+     route() numbers each element with --i */
+  .rise { animation: rise .45s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--i, 0) * 55ms); }
+  @keyframes rise { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: none; } }
+  /* the crescent drifts in from the right, then its caption fades in */
+  .earth-bg { animation: earth-in 1.6s cubic-bezier(.2, .7, .2, 1) both; }
+  .earth-label { animation: label-in .8s ease 1.2s both; }
+  @keyframes earth-in { from { opacity: 0; translate: 40px 0; } to { opacity: 1; translate: none; } }
+  @keyframes label-in { from { opacity: 0; } to { opacity: 1; } }
+  /* the active tab's top bar grows in */
+  .tab { position: relative; }
+  .tab.active { border-top-color: transparent; }
+  .tab.active::before {
+    content: ""; position: absolute; left: 0; right: 0; top: -2px; height: 2px;
+    background: var(--fg3); animation: grow .3s ease both; transform-origin: left;
+  }
+  @keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @media (prefers-reduced-motion: reduce) {
+    .rise, .earth-bg, .earth-label, .tab.active::before { animation: none; }
+  }
 
   .code {
     font-family: var(--mono); font-size: 14px; line-height: 1.8;
@@ -107,7 +138,7 @@
   .str { color: var(--fg2); }
   .dim { color: var(--bg3); }
 
-  .with-gutter { display: grid; grid-template-columns: 44px 1fr; column-gap: 20px; }
+  .with-gutter { display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 20px; }
   .gutter {
     font-family: var(--mono); font-size: 12px; color: var(--bg2);
     text-align: right; line-height: 1.8; padding-top: 2px; user-select: none;
@@ -315,7 +346,7 @@
   .statusline .hint { color: var(--gray); }
 
   @media (max-width: 640px) {
-    .with-gutter { grid-template-columns: 1fr; }
+    .with-gutter { grid-template-columns: minmax(0, 1fr); }
     .gutter { display: none; }
     .indent { padding-left: 14px; }
     .earth-bg { --h: 440px; opacity: .45; }
@@ -481,10 +512,11 @@ const FRAME = 0x40;
 const frameAddr = (tab, depth = 0) => STACK_BASE - tab * FRAME - depth * 0x20;
 const hex = n => "0x" + n.toString(16);
 
+const calm = matchMedia("(prefers-reduced-motion: reduce)");
 let sp = null;
 function moveSp(target) {
   const el = document.getElementById("sl-sp");
-  if (sp === null) { sp = target; el.textContent = "sp " + hex(sp); return; }
+  if (sp === null || calm.matches) { sp = target; el.textContent = "sp " + hex(sp); return; }
   const step = target < sp ? -8 : 8;
   clearInterval(moveSp.timer);
   moveSp.timer = setInterval(() => {
@@ -510,7 +542,7 @@ const views = {
     <div class="page home with-gutter">
       ${gutter(40)}
       <div>
-        <div class="code">
+        <div class="code code-top">
           <span class="kw">namespace</span> <span class="fn">toronto</span> {<br>
           <span class="kw">inline constexpr</span> std::inplace_vector&lt;std::meta::info, 3&gt; cats{ ${CATS.map(c => `<span class="fn">^^</span>${esc(c)}`).join(", ")} }; <span class="cm">// RIP C++26</span>
         </div>
@@ -647,18 +679,18 @@ const views = {
   },
 };
 
-// Covers come from Open Library by ISBN; if one is missing, a plain title block shows instead
+// Covers live in assets/covers/<isbn>.jpg (from Open Library); if one is missing, a plain title block shows instead
 function cover(b, cls = "") {
   return `<div class="cover ${cls}">
     <span class="cover-fallback">${esc(b.title)}</span>
-    ${b.isbn ? `<img src="https://covers.openlibrary.org/b/isbn/${b.isbn}-L.jpg?default=false" alt="Cover of ${esc(b.title)}" loading="lazy" onerror="this.remove()">` : ""}
+    ${b.isbn ? `<img src="assets/covers/${b.isbn}.jpg" alt="Cover of ${esc(b.title)}" loading="lazy" onerror="this.remove()">` : ""}
   </div>`;
 }
 
 function renderBooks(shelf) {
   const list = BOOKS.filter(b => shelf === "all" || b.shelf === shelf);
-  document.getElementById("books").innerHTML = list.map(b => `
-    <div class="book">
+  document.getElementById("books").innerHTML = list.map((b, i) => `
+    <div class="book rise" style="--i:${i}">
       ${cover(b)}
       <div class="book-body">
         <div class="t">${esc(b.title)}</div>
@@ -686,6 +718,9 @@ function route() {
   const tabIdx = Math.max(0, TABS.findIndex(t => t.path === top));
   moveSp(frameAddr(tabIdx, sub && top === "blog" ? 1 : 0));
   app.innerHTML = html;
+  // stagger the page's lines in (capped so long pages don't drag)
+  app.querySelectorAll(".page > :not(.gutter), .code-top, .hero > *, .prose, .goto > *, .links, .timeline > *, .featured > *, .resources > *")
+    .forEach((el, i) => { el.classList.add("rise"); el.style.setProperty("--i", Math.min(i, 12)); });
   document.getElementById("crumb").innerHTML = `~/${esc(ME.handle)}/<span>${esc(file)}</span>`;
   document.getElementById("sl-file").textContent = file;
   document.getElementById("sl-pos").textContent = "ln 1";
