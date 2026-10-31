@@ -152,7 +152,7 @@
 
   .goto {
     margin: 28px 0 8px; display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-width: 62ch;
+    grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; max-width: 62ch;
   }
   .goto a {
     display: block; text-decoration: none;
@@ -326,6 +326,7 @@
     .statusline > div { padding: 4px 8px; font-size: 11px; }
     .statusline .file { overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-shrink: 1; }
     .tab .key { display: none; }
+    .goto { grid-template-columns: minmax(0, 1fr); }
   }
 </style>
 </head>
@@ -340,7 +341,7 @@
   <div class="mode">NORMAL</div>
   <div class="file" id="sl-file">about.cpp</div>
   <div class="spacer"></div>
-  <div class="hint">press 1–5 to switch tabs</div>
+  <div class="hint">press 1–4 to switch tabs</div>
   <div class="enc">utf-8 · c++23</div>
   <div class="sp" id="sl-sp">sp 0x000000000000</div>
   <div id="sl-pos">ln 1</div>
@@ -453,7 +454,7 @@ const TABS = [
   { path: "",           file: "about.cpp",      label: "about.cpp" },
   { path: "projects",   file: "projects.hpp",   label: "projects.hpp" },
   { path: "experience", file: "experience.log", label: "experience.log" },
-  { path: "blog",       file: "blog/",          label: "blog/" },
+  // { path: "blog",    file: "blog/",          label: "blog/" },  // hidden until there's a post
   { path: "books",      file: "books.md",       label: "books.md" },
 ];
 
@@ -533,7 +534,6 @@ const views = {
           <div class="goto">
             <a href="#/projects">projects.hpp<small>things I've built</small></a>
             <a href="#/experience">experience.log<small>where I've worked</small></a>
-            <a href="#/blog">blog/<small>notes &amp; write-ups</small></a>
             <a href="#/books">books.md<small>books I recommend</small></a>
           </div>
 
@@ -602,7 +602,7 @@ const views = {
   books() {
     const shelves = ["all", ...new Set(BOOKS.map(b => b.shelf))];
     return `<div class="page">
-      ${sectionHead(`${hex(frameAddr(4))} · BOOKS`, "Books", "What I love, what I'm reading, and what I'd hand you.")}
+      ${sectionHead(`${hex(frameAddr(3))} · BOOKS`, "Books", "What I love, what I'm reading, and what I'd hand you.")}
       <div class="featured">
         <div class="feature">
           ${cover(FAVORITE_BOOK, "lg")}
@@ -677,7 +677,8 @@ function route() {
   if (top === "")                 { html = views.home(); file = "about.cpp"; }
   else if (top === "projects")    { html = views.projects(); file = "projects.hpp"; }
   else if (top === "experience")  { html = views.experience(); file = "experience.log"; }
-  else if (top === "blog")        { html = sub ? views.post(sub) : views.blog(); file = sub ? `blog/${sub}.md` : "blog/"; }
+  // blog is hidden for now; restore this line and its tab to bring it back
+  // else if (top === "blog")     { html = sub ? views.post(sub) : views.blog(); file = sub ? `blog/${sub}.md` : "blog/"; }
   else if (top === "books")       { html = views.books(); file = "books.md"; }
   else                            { html = views.notFound(); file = "???"; }
 
@@ -705,7 +706,7 @@ window.addEventListener("scroll", () => {
   document.getElementById("sl-pos").textContent = `ln ${ln}`;
 });
 
-// 1–5 jumps between tabs, like switching buffers
+// 1–4 jumps between tabs, like switching buffers
 window.addEventListener("keydown", e => {
   if (e.metaKey || e.ctrlKey || e.altKey || /input|textarea/i.test(e.target.tagName)) return;
   const i = parseInt(e.key, 10) - 1;
