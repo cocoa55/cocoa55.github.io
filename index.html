@@ -138,12 +138,6 @@
   .str { color: var(--fg2); }
   .dim { color: var(--bg3); }
 
-  .with-gutter { display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 20px; }
-  .gutter {
-    font-family: var(--mono); font-size: 12px; color: var(--bg2);
-    text-align: right; line-height: 1.8; padding-top: 2px; user-select: none;
-    border-right: 1px solid var(--bg1); padding-right: 12px;
-  }
 
   /* ---------- home ---------- */
   .hero-name {
@@ -346,8 +340,6 @@
   .statusline .hint { color: var(--gray); }
 
   @media (max-width: 640px) {
-    .with-gutter { grid-template-columns: minmax(0, 1fr); }
-    .gutter { display: none; }
     .indent { padding-left: 14px; }
     .earth-bg { --h: 440px; opacity: .45; }
     .earth-label { display: none; }
@@ -501,10 +493,6 @@ function renderTabs(active) {
        </a>`).join("");
 }
 
-function gutter(n) {
-  return `<div class="gutter">${Array.from({ length: n }, (_, i) => i + 1).join("<br>")}</div>`;
-}
-
 // Each tab is a stack frame; the stack grows down, so tabs further right sit at lower
 // addresses, and opening a project or post pushes one more frame below its tab.
 const STACK_BASE = 0x7ffd5e3c2400;
@@ -539,8 +527,7 @@ const views = {
   home() {
     return `<div class="earth-bg" aria-hidden="true"></div>
     <div class="earth-label" aria-hidden="true">there is no other home</div>
-    <div class="page home with-gutter">
-      ${gutter(40)}
+    <div class="page home">
       <div>
         <div class="code code-top">
           <span class="kw">namespace</span> <span class="fn">toronto</span> {<br>
@@ -719,7 +706,7 @@ function route() {
   moveSp(frameAddr(tabIdx, sub && top === "blog" ? 1 : 0));
   app.innerHTML = html;
   // stagger the page's lines in (capped so long pages don't drag)
-  app.querySelectorAll(".page > :not(.gutter), .code-top, .hero > *, .prose, .goto > *, .links, .timeline > *, .featured > *, .resources > *")
+  app.querySelectorAll(".page > *, .code-top, .hero > *, .prose, .goto > *, .links, .timeline > *, .featured > *, .resources > *")
     .forEach((el, i) => { el.classList.add("rise"); el.style.setProperty("--i", Math.min(i, 12)); });
   document.getElementById("crumb").innerHTML = `~/${esc(ME.handle)}/<span>${esc(file)}</span>`;
   document.getElementById("sl-file").textContent = file;
